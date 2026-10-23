@@ -491,7 +491,7 @@
     const slot = state.lastBookingSlot;
     const start = slotStart(slot);
     const specialty = SPECIALTIES[slot.provider];
-    const firstName = booking.name.split(/\s+/)[0];
+    const firstName = capitalise(booking.name.split(/\s+/)[0]);
     $('confirmed-greeting').textContent = `You're booked, ${firstName}.`;
 
     const copyBtn = h('button', {
