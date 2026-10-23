@@ -4,6 +4,9 @@ const path = require('path');
 const express = require('express');
 const { migrate } = require('./src/migrate');
 const { apiKey } = require('./src/middleware/apiKey');
+const resetRoutes = require('./src/routes/reset');
+const slotRoutes = require('./src/routes/slots');
+const bookingRoutes = require('./src/routes/bookings');
 
 const app = express();
 
@@ -19,7 +22,9 @@ app.use(apiKey);
 // Parse JSON only after auth, so a keyless request with a bad body still gets 401, not 400.
 app.use(express.json());
 
-// API routes are added in Phase 2+.
+app.use(resetRoutes);
+app.use(slotRoutes);
+app.use(bookingRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'not found' }));
 
