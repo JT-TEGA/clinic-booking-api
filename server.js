@@ -9,6 +9,7 @@ const slotRoutes = require('./src/routes/slots');
 const bookingRoutes = require('./src/routes/bookings');
 
 const app = express();
+app.disable('x-powered-by');
 
 // Public routes: mounted before the key check so the page and health probe load without a key.
 app.get('/healthz', (req, res) => res.json({ ok: true }));
@@ -20,7 +21,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(apiKey);
 // Parse JSON only after auth, so a keyless request with a bad body still gets 401, not 400.
-app.use(express.json());
+app.use(express.json({ limit: '16kb' }));
 
 app.use(resetRoutes);
 app.use(slotRoutes);
@@ -32,6 +33,9 @@ app.use((req, res) => res.status(404).json({ error: 'not found' }));
 app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'invalid JSON body' });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'request body too large' });
   }
   console.error(err.stack || err);
   res.status(500).json({ error: 'internal error' });
