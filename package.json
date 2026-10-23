@@ -1,0 +1,19 @@
+{
+  "name": "ilera-clinic-booking",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ìlera Clinic appointment booking API and web page",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node scripts/seed.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "express": "^4.22.3",
+    "pg": "^8.23.1"
+  }
+}
