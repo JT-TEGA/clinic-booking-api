@@ -531,20 +531,13 @@ button, input { font: inherit; color: inherit; }
   cursor: pointer;
   transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
 }
-/* Bookable pills carry a small coral dot; booked ones don't. */
-.time:not(:disabled)::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-}
 .time:hover:not(:disabled) {
   border-color: var(--brand);
   transform: translateY(-1px);
   box-shadow: 0 0 0 3px var(--brand-ring), var(--shadow-card);
 }
 .time:active:not(:disabled) { transform: translateY(0) scale(.98); }
+/* Coral on a time pill means "your pick"; open pills stay plain and booked ones muted. */
 .time[aria-pressed="true"],
 .time[aria-pressed="true"]:hover {
   background: var(--brand);
