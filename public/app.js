@@ -8,9 +8,9 @@
   const DEFAULT_RETRY_SECONDS = 60;
   // The API stores only a provider string; specialties are presentation only.
   const SPECIALTIES = {
-    'Tega Ukpe': 'General Practice',
-    'James Hope': 'Paediatrics',
-    'Adrian alas': 'Dermatology',
+    'Dr Tega Ukpe': 'General Practice',
+    'Dr James Hope': 'Paediatrics',
+    'Dr Adrian Alas': 'Dermatology',
   };
 
   const state = {

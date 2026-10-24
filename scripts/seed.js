@@ -1,7 +1,7 @@
 // Fills a deployment with realistic slots via POST /reset (this wipes existing bookings).
 // Usage: BASE_URL=http://localhost:3000 API_KEY=... npm run seed
 
-const DOCTORS = ['Tega Ukpe', 'James Hope', 'Adrian alas'];
+const DOCTORS = ['Dr Tega Ukpe', 'Dr James Hope', 'Dr Adrian Alas'];
 const WEEKDAYS_AHEAD = 5;
 const SLOT_MINUTES = 30;
 // Lagos is UTC+1 all year (no DST), so 09:00 and 09:30 local are 08:00Z and 08:30Z.
@@ -28,7 +28,7 @@ function iso(ms) {
   return new Date(ms).toISOString().replace('.000Z', 'Z');
 }
 
-// "James Hope" at 2026-10-26 08:00Z -> "james-2026-10-26-0900" (Lagos clock time in the id).
+// "Dr James Hope" at 2026-10-26 08:00Z -> "james-2026-10-26-0900" (Lagos clock time in the id).
 function slotId(doctor, startMs) {
   const name = doctor.replace(/^Dr\s+/, '').split(/\s+/)[0].toLowerCase();
   const lagos = new Date(startMs + LAGOS_OFFSET_MS).toISOString();

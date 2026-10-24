@@ -14,7 +14,7 @@ A clinic needs:
 
 Both are deployed at a public HTTPS URL. Koya runs an automated grading script against the API using our API key, checking exact status codes level by level. **API correctness is the grade. The page is the demo.**
 
-Fictional brand used on the page: **Ìlera Clinic** ("ìlera" is Yoruba for health), Lekki, Lagos. Demo doctors: Tega Ukpe (General Practice), James Hope (Paediatrics), Adrian alas (Dermatology). The API itself stores only a `provider` string — titles/specialties live in the frontend only.
+Fictional brand used on the page: **Ìlera Clinic** ("ìlera" is Yoruba for health), Lekki, Lagos. Demo doctors: Dr Tega Ukpe (General Practice), Dr James Hope (Paediatrics), Dr Adrian Alas (Dermatology). The API itself stores only a `provider` string — titles/specialties live in the frontend only.
 
 ### Levels (all five are in scope)
 | Level | Requirement |
@@ -133,7 +133,7 @@ CREATE INDEX IF NOT EXISTS rl_lookup ON rate_limit_attempts (email, attempted_at
 ### Shapes
 ```jsonc
 // Slot as returned by GET /slots
-{"id":"s1","provider":"Tega Ukpe","start":"2026-12-10T09:00:00Z","end":"2026-12-10T09:30:00Z","available":true}
+{"id":"s1","provider":"Dr Tega Ukpe","start":"2026-12-10T09:00:00Z","end":"2026-12-10T09:30:00Z","available":true}
 // Booking
 {"id":"<uuid>","slot_id":"s1","name":"Ada Obi","email":"ada@example.com","status":"confirmed","created_at":"2026-10-23T00:07:43.429Z"}
 // Error
