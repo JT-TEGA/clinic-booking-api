@@ -2,6 +2,11 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+:root {
+  --header-h: 76px;       /* 52px nav pills + 2 x 12px padding */
+  --action-bar-h: 73px;   /* 48px button + 2 x 12px padding + 1px divider */
+}
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -134,32 +139,59 @@ button, input { font: inherit; color: inherit; }
 }
 
 @media (min-width: 900px) {
-  .page { padding: var(--space-10) var(--space-6); }
+  /* Sticky header gives the hero a fixed offset to pin against. */
+  .topbar { position: sticky; top: 0; z-index: 20; }
+  .topbar__inner { height: var(--header-h); padding-block: 0; }
+
+  .page { padding: var(--space-6) var(--space-6) var(--space-10); }
   .tab { padding: 0 var(--space-4); }
 
+  /* Two adjoining cards rather than one clipped card: an overflow:hidden wrapper
+     would stop the hero from sticking. */
   .shell {
     max-width: 1040px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 380px;
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-panel);
-    overflow: hidden;
-    min-height: 680px;
   }
   .panel--flow {
-    box-shadow: none;
-    border-radius: 0;
-    padding: var(--space-10);
+    /* Only the top-right corner meets the hero; the flow card usually runs taller. */
+    border-radius: var(--radius-lg) 0 var(--radius-lg) var(--radius-lg);
+    padding: var(--space-8) var(--space-10) var(--space-6);
   }
 
+  /* Pinned below the header and sized to the viewport, so the photo stays framed while
+     the flow column scrolls. The gap above and below matches the page's top padding. */
   .panel--hero {
-    position: relative;
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-6));
+    align-self: start;
+    height: calc(100vh - var(--header-h) - 2 * var(--space-6));
+    min-height: 520px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
     background: var(--hero-panel-bg);
+    box-shadow: var(--shadow-panel);
     color: var(--hero-text);
+  }
+  /* On short viewports the photo gives up height before the text does. */
+  .hero__photo { flex: 0 1 auto; min-height: 180px; }
+  .hero__content { flex: 1 0 auto; }
+
+  .stepper { margin: var(--space-6) 0 var(--space-4); }
+  .lede { margin-top: var(--space-2); }
+
+  /* Continue stays in view at the bottom of the flow card while the list scrolls. A sticky
+     bar keeps its own space in the flow, so it never covers the last doctor card. */
+  #step-1 > .actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin: var(--space-4) calc(-1 * var(--space-10)) 0;
+    padding: var(--space-3) var(--space-10);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
   }
 
   /* Set only here so phones never download the photo. The 8:7 frame shows enough of the
@@ -937,6 +969,23 @@ button, input { font: inherit; color: inherit; }
   }
   .day__month,
   .day__open { display: none; }
+
+  /* Continue pinned to the bottom of the viewport. It lives inside #step-1, so it disappears
+     with that step and on the My bookings tab. */
+  #step-1 > .actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    min-height: var(--action-bar-h);
+    margin: 0;
+    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  #step-1 > .actions .btn { width: 100%; }
+  .page { padding-bottom: calc(var(--space-10) + var(--action-bar-h)); }
   .day__num { font-size: 1.25rem; }
 
   .day-summary {
