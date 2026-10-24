@@ -6,7 +6,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "test": "node --test test/unit/*.test.js",
+    "test:api": "bash test/check.sh"
   },
   "engines": {
     "node": ">=20"

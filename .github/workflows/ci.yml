@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: clinic_test
+        ports:
+          - 5432:5432
+        # The job's steps don't start until this health check passes.
+        options: >-
+          --health-cmd "pg_isready -U postgres -d clinic_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/clinic_test
+      API_KEY: ci-throwaway-key
+      PORT: 3000
+      BASE_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Start server
+        run: nohup node server.js > server.log 2>&1 &
+
+      - name: Wait for /healthz
+        run: |
+          for i in $(seq 1 30); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/healthz")" = 200 ]; then
+              echo "Server is up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server did not answer /healthz with 200 within 30s"
+          cat server.log
+          exit 1
+
+      - name: API suite (check.sh)
+        run: bash test/check.sh
+
+      - name: Server log
+        if: always()
+        run: cat server.log || true

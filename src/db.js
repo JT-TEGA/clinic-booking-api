@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const { log, errorFields } = require('./lib/log');
 
 // Hosted Postgres (Neon/Render/RDS) requires TLS; local Postgres usually doesn't speak it.
 const needsSsl = /neon\.tech|render\.com|amazonaws\.com/.test(process.env.DATABASE_URL || '');
@@ -10,7 +11,8 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000,
 });
 
-pool.on('error', (err) => console.error('pg pool error', err));
+// Idle clients can be dropped by the server (restarts, failovers); pg replaces them on demand.
+pool.on('error', (err) => log('error', 'pg pool error', errorFields(err)));
 
 // A stuck query (e.g. waiting on a lock) should fail the request, not hold a pool slot forever.
 // Set once per new connection and awaited, so it never races the caller's first query.
@@ -47,4 +49,9 @@ async function withClient(fn) {
   }
 }
 
-module.exports = { pool, connect, query, withClient };
+// Waits for checked-out clients to be released, then closes every connection.
+function close() {
+  return pool.end();
+}
+
+module.exports = { pool, connect, query, withClient, close };

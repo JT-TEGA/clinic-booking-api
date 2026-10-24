@@ -2,7 +2,9 @@ const express = require('express');
 const { connect, query } = require('../db');
 const { normaliseBooking, isValidEmail, validateBooking } = require('../lib/validate');
 const { bookingHash } = require('../lib/hash');
+const { encodeCursor, decodeCursor } = require('../lib/cursor');
 const serialize = require('../lib/serialize');
+const { log, errorFields } = require('../lib/log');
 
 const router = express.Router();
 
@@ -139,7 +141,7 @@ async function createBooking(client, input, key) {
 function pruneRateLimitAttempts() {
   if (Math.random() >= CLEANUP_PROBABILITY) return;
   query(`DELETE FROM rate_limit_attempts WHERE attempted_at < now() - interval '5 minutes'`)
-    .catch((err) => console.error('rate limit cleanup', err));
+    .catch((err) => log('error', 'rate limit cleanup failed', errorFields(err)));
 }
 
 router.post('/bookings', async (req, res, next) => {
@@ -183,24 +185,6 @@ function parseLimit(raw) {
   return n >= 1 && n <= MAX_LIMIT ? n : null;
 }
 
-const CURSOR_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/;
-
-function encodeCursor(row) {
-  return Buffer.from(`${row.cursor_ts}|${row.id}`).toString('base64url');
-}
-
-// Returns { ts, id }, or null when the cursor isn't one we issued.
-function decodeCursor(raw) {
-  if (typeof raw !== 'string' || !/^[A-Za-z0-9_-]+$/.test(raw)) return null;
-  const decoded = Buffer.from(raw, 'base64url').toString('utf8');
-  const sep = decoded.indexOf('|');
-  if (sep < 0) return null;
-  const ts = decoded.slice(0, sep);
-  const id = decoded.slice(sep + 1);
-  if (!CURSOR_TS_RE.test(ts) || Number.isNaN(Date.parse(ts)) || !id) return null;
-  return { ts, id };
-}
-
 router.get('/bookings', async (req, res, next) => {
   const email = typeof req.query.email === 'string' ? req.query.email.trim().toLowerCase() : '';
   if (!email) return res.status(400).json({ error: 'email is required' });
@@ -215,8 +199,7 @@ router.get('/bookings', async (req, res, next) => {
   }
 
   try {
-    // Cursor timestamps keep Postgres' microseconds: a millisecond ISO string would sort
-    // before the row it came from and repeat it on the next page.
+    // cursor_ts keeps microseconds; see src/lib/cursor.js.
     const { rows } = await query(
       `SELECT *, to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_ts
        FROM bookings
@@ -227,7 +210,8 @@ router.get('/bookings', async (req, res, next) => {
       [email, cursor && cursor.ts, cursor && cursor.id, limit + 1]
     );
     const page = rows.slice(0, limit);
-    const nextCursor = rows.length > limit ? encodeCursor(page[page.length - 1]) : null;
+    const last = page[page.length - 1];
+    const nextCursor = rows.length > limit ? encodeCursor(last.cursor_ts, last.id) : null;
     res.json({ bookings: page.map(serialize.booking), next_cursor: nextCursor });
   } catch (err) {
     next(err);
