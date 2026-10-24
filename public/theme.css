@@ -20,24 +20,73 @@
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
 }
 
-/* Phase 4 overrides and additions (light theme only, per the Phase 4 brief). */
+/* Overrides and additions (light theme only). */
 :root {
-  /* Outfit is the only web font loaded (see index.html). */
-  --font-display: "Outfit", system-ui, sans-serif;
+  /* Fraunces (from 7.3) for page headings only; Outfit for all UI and body text. */
   --font-body: "Outfit", system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* Teal hero panel on desktop; white text stays above 4.5:1 across the whole gradient. */
+  /* Page background: faint sage and coral washes so the card lifts off the paper. */
+  --page-bg:
+    radial-gradient(1100px 620px at 92% -8%, rgba(47,93,80,.10), rgba(47,93,80,0) 62%),
+    radial-gradient(900px 560px at -6% 108%, rgba(227,130,92,.10), rgba(227,130,92,0) 60%),
+    #F7F4EE;
+
+  /* Warm accent, tuned toward coral-amber. Decorative only: 2.8:1 on white, so never text. */
+  --accent: #E3825C;
+  --accent-soft: #FCEEE6;
+  --accent-glow: rgba(227,130,92,.38);
+  /* Accent for text: 6.5:1 on white, 5.7:1 on --accent-soft. */
+  --accent-text: #9A4527;
+
+  /* Hero panel. White text sits on --hero-start (9.5:1) or darker, never on the raw photo. */
   --hero-start: #134E4A;
   --hero-end: #1F7A72;
+  --hero-deep: #0B2F2C;
   --hero-text: #FFFFFF;
   --hero-text-muted: rgba(255,255,255,.86);
   --hero-ring: rgba(255,255,255,.14);
+  --hero-image: url("/hero.jpg");
+  /* Multiplied over the photo for a teal duotone feel. */
+  --hero-overlay: linear-gradient(160deg, rgba(31,122,114,.50), rgba(19,78,74,.78));
+  /* Normal blend on top: fades the photo into the panel, darkest toward the bottom-left. */
+  --hero-fade:
+    linear-gradient(to bottom, rgba(19,78,74,0) 42%, #134E4A 100%),
+    radial-gradient(120% 80% at 0% 100%, rgba(11,47,44,.55), rgba(11,47,44,0) 65%);
+  --hero-panel-bg:
+    radial-gradient(130% 70% at 0% 100%, #0B2F2C, rgba(11,47,44,0) 70%),
+    #134E4A;
+
+  /* Frosted chips over the photo: near-opaque white keeps dark text above 10:1 on any pixel. */
+  --glass-bg: rgba(255,255,255,.82);
+  --glass-border: rgba(255,255,255,.65);
+  --glass-shadow: 0 1px 1px rgba(11,47,44,.10), 0 8px 24px -6px rgba(11,47,44,.35);
 
   --brand-hover: #264D42;
   --brand-tint: rgba(255,255,255,.14);   /* nav pill track on the brand bar */
-  --brand-soft: #E4EEEA;                 /* avatar and selected-day hover wash */
+  --brand-soft: #E4EEEA;
+  --brand-ring: rgba(47,93,80,.18);      /* hover ring on cards and pills */
   --focus-ring: #2F5D50;
+
+  /* Layered depth: a tight contact shadow plus a soft ambient one. */
+  --shadow-card:
+    0 1px 2px rgba(19,40,35,.06),
+    0 1px 1px rgba(19,40,35,.04),
+    0 10px 28px -10px rgba(19,40,35,.14);
+  --shadow-raised:
+    0 2px 4px rgba(19,40,35,.07),
+    0 1px 2px rgba(19,40,35,.05),
+    0 18px 36px -12px rgba(19,40,35,.22);
+  --shadow-panel:
+    0 1px 2px rgba(19,40,35,.05),
+    0 2px 6px rgba(19,40,35,.04),
+    0 30px 70px -24px rgba(19,40,35,.28);
+
+  /* Avatar gradients per specialty; initials colour is 5.5:1+ on both stops. */
+  --avatar-gp-from: #E1EEE8;      --avatar-gp-to: #C3DCD1;      --avatar-gp-text: #1F4A3F;
+  --avatar-paeds-from: #FDEFD9;   --avatar-paeds-to: #F6D7A9;   --avatar-paeds-text: #6E4310;
+  --avatar-derm-from: #FAE6EA;    --avatar-derm-to: #EFC8D1;    --avatar-derm-text: #76304A;
+  --avatar-default-from: #EFEBE3; --avatar-default-to: #E2DDD3; --avatar-default-text: #2F5D50;
 
   /* Pill/banner washes; text colours chosen for 4.5:1 on their wash. */
   --success-soft: #E3F1E9;
@@ -47,4 +96,7 @@
 
   --radius-pill: 999px;
   --space-5: 20px; --space-10: 40px;
+
+  --ease-out: cubic-bezier(.2,.8,.2,1);
+  --duration-fast: 160ms;
 }

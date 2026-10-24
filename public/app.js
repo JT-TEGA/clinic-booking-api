@@ -12,6 +12,12 @@
     'Dr James Hope': 'Paediatrics',
     'Dr Adrian Alas': 'Dermatology',
   };
+  // Avatar tint per specialty (classes in style.css); unknown specialties get the neutral tint.
+  const AVATAR_TONES = {
+    'General Practice': 'gp',
+    Paediatrics: 'paeds',
+    Dermatology: 'derm',
+  };
 
   const state = {
     slots: [],
@@ -243,7 +249,7 @@
       const headingId = `doc-${provider.replace(/[^a-z0-9]+/gi, '-')}`;
       return h('section', { class: 'doctor', 'aria-labelledby': headingId },
         h('div', { class: 'doctor__head' },
-          h('span', { class: 'avatar', 'aria-hidden': 'true', text: initials(provider) }),
+          h('span', { class: `avatar avatar--${AVATAR_TONES[specialty] || 'default'}`, 'aria-hidden': 'true', text: initials(provider) }),
           h('div', null,
             h('h3', { class: 'doctor__name', id: headingId, text: provider }),
             specialty ? h('p', { class: 'doctor__specialty', text: specialty }) : null)),
@@ -500,7 +506,7 @@
 
     const copyBtn = h('button', {
       type: 'button',
-      class: 'btn btn--ghost btn--small',
+      class: 'ticket__copy',
       'aria-label': 'Copy full booking reference',
       text: 'Copy',
       onclick: async () => {
@@ -518,12 +524,16 @@
       ['Time', timeRange(start, slotEnd(slot))],
       ['Email', booking.email],
       ['Status', statusPill(booking.status)],
-      ['Reference', h('span', { class: 'reference' },
-        h('code', { title: booking.id, text: booking.id.slice(0, 8) }), copyBtn)],
     ].filter(Boolean);
 
     $('confirmed-details').replaceChildren(...rows.map(([label, value]) =>
       h('div', { class: 'details__row' }, h('dt', { text: label }), h('dd', null, value))));
+
+    $('confirmed-ticket').replaceChildren(h('div', { class: 'ticket' },
+      h('div', { class: 'ticket__main' },
+        h('p', { class: 'ticket__label', text: 'Booking reference' }),
+        h('code', { class: 'ticket__code', title: booking.id, text: booking.id.slice(0, 8) })),
+      h('div', { class: 'ticket__stub' }, copyBtn)));
   }
 
   async function copyText(text) {
