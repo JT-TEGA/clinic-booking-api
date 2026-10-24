@@ -274,7 +274,11 @@
     state.selectedDay = key;
     renderSlots();
     const btn = document.querySelector(`.day[data-day="${key}"]`);
-    if (btn) btn.focus();
+    if (!btn) return;
+    // preventScroll so focus doesn't jump instantly and cancel the smooth scroll below.
+    btn.focus({ preventScroll: true });
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    btn.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', inline: 'center', block: 'nearest' });
   }
 
   // Updated in place so keyboard focus stays on the pill the user just pressed.

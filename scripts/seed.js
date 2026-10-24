@@ -2,7 +2,7 @@
 // Usage: BASE_URL=http://localhost:3000 API_KEY=... npm run seed
 
 const DOCTORS = ['Dr Ade Bakare', 'Dr Nkechi Obi', 'Dr Musa Bello'];
-const WEEKDAYS_AHEAD = 3;
+const WEEKDAYS_AHEAD = 5;
 const SLOT_MINUTES = 30;
 // Lagos is UTC+1 all year (no DST), so 09:00 and 09:30 local are 08:00Z and 08:30Z.
 const LAGOS_OFFSET_MS = 60 * 60 * 1000;
