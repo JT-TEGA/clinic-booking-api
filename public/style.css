@@ -910,6 +910,78 @@ button, input { font: inherit; color: inherit; }
 .booking__prompt { font-weight: 500; margin-right: auto; }
 .booking__error { font-size: .875rem; color: var(--danger-text); }
 
+/* ---------- Mobile only (below 900px) ---------- */
+
+/* Created by app.js; desktop never shows them. */
+.hero-band,
+.day-summary { display: none; }
+
+@media (max-width: 899.98px) {
+  .headline {
+    font-size: 1.75rem;
+    line-height: 1.12;
+    letter-spacing: -.02em;
+  }
+  .lede {
+    margin-top: var(--space-2);
+    font-size: .9375rem;
+  }
+
+  /* Compact chips: weekday and date only; month and count move to .day-summary.
+     Five chips (5 x 54px + gaps) fit the 311px strip at 375px wide. */
+  .day {
+    min-width: 54px;
+    min-height: 64px;
+    padding: var(--space-2) var(--space-1);
+    gap: 0;
+  }
+  .day__month,
+  .day__open { display: none; }
+  .day__num { font-size: 1.25rem; }
+
+  .day-summary {
+    display: block;
+    margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+    font-size: .875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  /* Slim photo band under the header. Text stays on the left, away from the white coat,
+     over the darkest part of the overlay and fade. */
+  .hero-band {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    height: 128px;
+    padding: var(--space-4);
+    background-image: var(--hero-overlay), var(--hero-image);
+    background-blend-mode: multiply, normal;
+    background-size: cover;
+    background-position: center, 30% 22%;
+    background-repeat: no-repeat;
+    color: var(--hero-text);
+  }
+  .hero-band::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--hero-fade);
+  }
+  .hero-band__tagline {
+    position: relative;
+    z-index: 1;
+    /* Breaks after "care," so the text ends left of the doctor's face. */
+    max-width: 9.5em;
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    line-height: 1.1;
+    font-weight: 500;
+    letter-spacing: -.01em;
+    text-shadow: 0 1px 12px var(--hero-deep);
+  }
+}
+
 /* ---------- Motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {

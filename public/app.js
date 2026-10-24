@@ -180,6 +180,7 @@
         h('p', { class: 'sr-only', text: 'Loading appointments…' }),
         ...Array.from({ length: 3 }, () => h('div', { class: 'skeleton skeleton--doctor', 'aria-hidden': 'true' })));
       list.setAttribute('aria-busy', 'true');
+      $('day-summary').hidden = true;
       updateContinue();
       return;
     }
@@ -188,6 +189,7 @@
     if (state.slotsStatus === 'error' && !state.slots.length) {
       strip.replaceChildren();
       list.replaceChildren(errorNotice("We couldn't load appointments.", 'Retry', loadSlots));
+      $('day-summary').hidden = true;
       updateContinue();
       return;
     }
@@ -199,6 +201,7 @@
         h('p', { text: 'No open appointments right now. Check back soon.' }),
         h('button', { type: 'button', class: 'btn btn--ghost', text: 'Refresh', onclick: loadSlots })));
       state.selectedSlotId = null;
+      $('day-summary').hidden = true;
       updateContinue();
       return;
     }
@@ -214,6 +217,7 @@
 
     strip.replaceChildren(...[...days.values()].map(dayButton));
     const day = days.get(state.selectedDay);
+    renderDaySummary(day);
     const refreshError = state.slotsStatus === 'error'
       ? errorNotice("Couldn't refresh appointments. Showing the last list we had.", 'Retry', loadSlots)
       : null;
@@ -274,6 +278,14 @@
       'aria-label': range,
       onclick: () => selectSlot(slot.id),
     }, h('span', { class: 'time__clock', text: fmtTime.format(start) }));
+  }
+
+  // Mobile only (CSS-hidden from 900px): stands in for the month and count hidden on compact chips.
+  function renderDaySummary(day) {
+    const open = day.slots.filter((s) => s.available).length;
+    const el = $('day-summary');
+    el.textContent = `${open ? `${open} open` : 'Fully booked'} · ${fmtDate.format(day.date)}`;
+    el.hidden = false;
   }
 
   function selectDay(key) {
@@ -752,7 +764,15 @@
 
   // ---------- Wiring ----------
 
+  // Elements only the mobile layout shows; created here so index.html stays as it is.
+  function mountMobileExtras() {
+    document.querySelector('.topbar').after(h('div', { class: 'hero-band' },
+      h('p', { class: 'hero-band__tagline', text: 'Unhurried care, close to home.' })));
+    $('day-strip').after(h('p', { class: 'day-summary', id: 'day-summary', hidden: true }));
+  }
+
   function init() {
+    mountMobileExtras();
     $('tab-book').addEventListener('click', () => switchTab('book', { focus: true }));
     $('tab-mine').addEventListener('click', () => switchTab('mine', { focus: true }));
 
