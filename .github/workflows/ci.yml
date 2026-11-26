@@ -33,6 +33,7 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/clinic_test
       API_KEY: ci-throwaway-key
+      RESET_TOKEN: ci-throwaway-reset-token
       PORT: 3000
       BASE_URL: http://localhost:3000
 

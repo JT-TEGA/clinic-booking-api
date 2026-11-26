@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Level-by-level verification of the booking API. Needs only curl + jq.
-# Usage: BASE_URL=http://localhost:3000 API_KEY=... [MAX_LEVEL=5] ./test/check.sh
+# Usage: BASE_URL=http://localhost:3000 API_KEY=... RESET_TOKEN=... [MAX_LEVEL=5] ./test/check.sh
 set -u
 
 BASE_URL=${BASE_URL:?set BASE_URL}
 BASE_URL=${BASE_URL%/}
 API_KEY=${API_KEY:?set API_KEY}
+RESET_TOKEN=${RESET_TOKEN:?set RESET_TOKEN}
 MAX_LEVEL=${MAX_LEVEL:-5}
 
 TMP=$(mktemp -d)
@@ -63,7 +64,7 @@ expect() {
 expect_error() { expect "$1" "$2" 'keys == ["error"] and (.error | type == "string")'; }
 
 reset_with() {
-  request POST /reset "$2"
+  request POST /reset "$2" -H "X-Reset-Token: $RESET_TOKEN"
   expect "$1: reset" 200 '. == {"ok": true}'
 }
 
@@ -158,7 +159,8 @@ L2_BOOK_BODY=$(booking_body l2-a 'No Key' "$(email l2-nokey)")
 for key_case in none wrong; do
   key=''
   [ "$key_case" = wrong ] && key="wrong-$API_KEY"
-  request_as "$key" POST /reset "$L2_RESET_BODY";   expect_status "L2: POST /reset ($key_case key) -> 401" 401
+  request_as "$key" POST /reset "$L2_RESET_BODY" -H "X-Reset-Token: $RESET_TOKEN"
+  expect_status "L2: POST /reset ($key_case key) -> 401" 401
   request_as "$key" GET /slots;                     expect_status "L2: GET /slots ($key_case key) -> 401" 401
   request_as "$key" POST /bookings "$L2_BOOK_BODY"; expect_status "L2: POST /bookings ($key_case key) -> 401" 401
   request_as "$key" GET "/bookings?email=a@b.co";   expect_status "L2: GET /bookings ($key_case key) -> 401" 401
@@ -167,8 +169,13 @@ for key_case in none wrong; do
 done
 request_as '' GET /slots
 expect_error "L2: 401 body is {\"error\": ...}" 401
+# The API key is public (the page ships it), so /reset also needs its own secret.
+request POST /reset "$L2_RESET_BODY"
+expect_error "L2: POST /reset with API key but no reset token -> 403" 403
+request POST /reset "$L2_RESET_BODY" -H "X-Reset-Token: wrong-$RESET_TOKEN"
+expect_error "L2: POST /reset with wrong reset token -> 403" 403
 request GET /slots
-expect "L2: unauthenticated /reset did not wipe data" 200 '.slots | length == 3'
+expect "L2: rejected /reset calls did not wipe data" 200 '.slots | length == 3'
 request_as '' GET /healthz
 expect_status "L2: /healthz needs no key" 200
 

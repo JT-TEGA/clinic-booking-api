@@ -1,76 +1,50 @@
 // Fills a deployment with realistic slots via POST /reset (this wipes existing bookings).
-// Usage: BASE_URL=http://localhost:3000 API_KEY=... npm run seed
+// Usage: BASE_URL=http://localhost:3000 API_KEY=... RESET_TOKEN=... npm run seed
 
-const DOCTORS = ['Dr Tega Ukpe', 'Dr James Hope', 'Dr Adrian Alas'];
+const { DOCTORS, DAY_MS, lagosDayStart, makeSlot } = require('../src/lib/schedule');
+
+// A small set that fits in one /reset body. The server's automatic top-up fills in the rest
+// of the 14-day window on its next restart, reusing these ids, so nothing is duplicated.
 const WEEKDAYS_AHEAD = 5;
-const SLOT_MINUTES = 30;
-// Lagos is UTC+1 all year (no DST), so 09:00 and 09:30 local are 08:00Z and 08:30Z.
-const LAGOS_OFFSET_MS = 60 * 60 * 1000;
-const START_TIMES_UTC = [[8, 0], [8, 30]];
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-// 00:00Z on today's calendar date in Lagos.
-function lagosToday() {
-  const lagosNow = new Date(Date.now() + LAGOS_OFFSET_MS);
-  return Date.UTC(lagosNow.getUTCFullYear(), lagosNow.getUTCMonth(), lagosNow.getUTCDate());
-}
+const START_TIMES_LAGOS = [[9, 0], [9, 30]];
 
 function nextWeekdays(count) {
   const days = [];
-  for (let day = lagosToday() + DAY_MS; days.length < count; day += DAY_MS) {
-    const dow = new Date(day).getUTCDay();
+  for (let day = lagosDayStart(Date.now()) + DAY_MS; days.length < count; day += DAY_MS) {
+    const dow = new Date(day + 12 * 60 * 60 * 1000).getUTCDay(); // midday Lagos, safely on the right date
     if (dow !== 0 && dow !== 6) days.push(day);
   }
   return days;
-}
-
-function iso(ms) {
-  return new Date(ms).toISOString().replace('.000Z', 'Z');
-}
-
-// "Dr James Hope" at 2026-10-26 08:00Z -> "james-2026-10-26-0900" (Lagos clock time in the id).
-function slotId(doctor, startMs) {
-  const name = doctor.replace(/^Dr\s+/, '').split(/\s+/)[0].toLowerCase();
-  const lagos = new Date(startMs + LAGOS_OFFSET_MS).toISOString();
-  return `${name}-${lagos.slice(0, 10)}-${lagos.slice(11, 13)}${lagos.slice(14, 16)}`;
-}
-
-function makeSlot(doctor, startMs) {
-  return {
-    id: slotId(doctor, startMs),
-    provider: doctor,
-    start: iso(startMs),
-    end: iso(startMs + SLOT_MINUTES * 60 * 1000),
-  };
 }
 
 function buildSlots() {
   const slots = [];
   for (const day of nextWeekdays(WEEKDAYS_AHEAD)) {
     for (const doctor of DOCTORS) {
-      for (const [hour, minute] of START_TIMES_UTC) {
+      for (const [hour, minute] of START_TIMES_LAGOS) {
         slots.push(makeSlot(doctor, day + (hour * 60 + minute) * 60 * 1000));
       }
     }
   }
   // Already ended, to prove the page hides past slots.
-  const [hour, minute] = START_TIMES_UTC[0];
-  slots.push(makeSlot(DOCTORS[0], lagosToday() - DAY_MS + (hour * 60 + minute) * 60 * 1000));
+  const [hour, minute] = START_TIMES_LAGOS[0];
+  slots.push(makeSlot(DOCTORS[0], lagosDayStart(Date.now()) - DAY_MS + (hour * 60 + minute) * 60 * 1000));
   return slots;
 }
 
 async function main() {
   const baseUrl = (process.env.BASE_URL || '').replace(/\/+$/, '');
   const apiKey = process.env.API_KEY;
-  if (!baseUrl || !apiKey) {
-    console.error('Usage: BASE_URL=https://... API_KEY=... npm run seed');
+  const resetToken = process.env.RESET_TOKEN;
+  if (!baseUrl || !apiKey || !resetToken) {
+    console.error('Usage: BASE_URL=https://... API_KEY=... RESET_TOKEN=... npm run seed');
     process.exit(1);
   }
 
   const slots = buildSlots();
   const res = await fetch(`${baseUrl}/reset`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+    headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey, 'X-Reset-Token': resetToken },
     body: JSON.stringify({ slots }),
   });
   const body = await res.text();

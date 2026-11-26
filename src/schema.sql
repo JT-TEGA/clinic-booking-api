@@ -7,6 +7,9 @@ CREATE TABLE IF NOT EXISTS slots (
   end_raw    TEXT        NOT NULL
 );
 
+-- The slot top-up skips any doctor/time that already has a slot.
+CREATE INDEX IF NOT EXISTS slots_provider_start ON slots (provider, starts_at);
+
 CREATE TABLE IF NOT EXISTS bookings (
   id         TEXT PRIMARY KEY,
   slot_id    TEXT        NOT NULL,

@@ -1,11 +1,14 @@
 const express = require('express');
 const { query } = require('../db');
 const serialize = require('../lib/serialize');
+const { slotTopUp } = require('../slotTopUp');
 
 const router = express.Router();
 
 router.get('/slots', async (req, res, next) => {
   const provider = typeof req.query.provider === 'string' ? req.query.provider : null;
+  // Throttled and never throws; keeps the rolling 14-day window filled on long-awake servers.
+  await slotTopUp.maybeTopUp();
   try {
     // available is computed from confirmed bookings, never stored, so it can't drift.
     const { rows } = await query(

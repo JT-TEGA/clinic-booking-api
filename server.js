@@ -5,8 +5,10 @@ const path = require('path');
 const express = require('express');
 const { migrate } = require('./src/migrate');
 const db = require('./src/db');
+const { slotTopUp } = require('./src/slotTopUp');
 const { log, errorFields } = require('./src/lib/log');
 const { apiKey } = require('./src/middleware/apiKey');
+const { resetToken } = require('./src/middleware/resetToken');
 const resetRoutes = require('./src/routes/reset');
 const slotRoutes = require('./src/routes/slots');
 const bookingRoutes = require('./src/routes/bookings');
@@ -59,6 +61,8 @@ app.get('/config.js', (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(apiKey);
+// /reset also needs X-Reset-Token (and is a 404 without RESET_TOKEN), checked before the body is parsed.
+app.post('/reset', resetToken);
 // Parse JSON only after auth, so a keyless request with a bad body still gets 401, not 400.
 app.use(express.json({ limit: '16kb' }));
 
@@ -110,6 +114,13 @@ function handleShutdown(server) {
 
 async function main() {
   await migrate();
+  // Render's free tier sleeps and wakes, so this runs often. A failure here shouldn't stop
+  // the server; GET /slots retries later.
+  try {
+    await slotTopUp.topUp();
+  } catch (err) {
+    log('error', 'slot top-up failed', errorFields(err));
+  }
   const port = process.env.PORT || 3000;
   const server = app.listen(port, '0.0.0.0', () => log('info', 'listening', { port: Number(port) }));
   const onSignal = handleShutdown(server);

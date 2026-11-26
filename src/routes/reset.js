@@ -1,5 +1,6 @@
 const express = require('express');
 const { withClient } = require('../db');
+const { slotTopUp } = require('../slotTopUp');
 
 const router = express.Router();
 
@@ -21,10 +22,14 @@ router.post('/reset', async (req, res, next) => {
     return res.status(400).json({ error: 'duplicate slot id' });
   }
 
+  // The caller now owns the slot list: stop the automatic top-up until the next restart.
+  slotTopUp.pause();
   try {
     await withClient(async (client) => {
       try {
         await client.query('BEGIN');
+        // Waits out a top-up already in progress, so none of its slots survive this reset.
+        await slotTopUp.lock(client);
         await client.query('DELETE FROM bookings');
         await client.query('DELETE FROM slots');
         await client.query('DELETE FROM idempotency_keys');
